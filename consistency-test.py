@@ -1,7 +1,8 @@
+import logging
 import os
 from random import random
 import time
-
+import redis
 
 class ConsistencyTester:
     def __init__(self, redis) -> None:
@@ -41,3 +42,34 @@ class ConsistencyTester:
         
         self.errtime[msg] = self.time.time()
     
+    def test(self):
+        last_report = time.time()
+        while True:
+            # Read
+            key = self.genkey()
+            try:
+                val = self.r.get(key)
+                self.check_consistency(key,str(val))
+                self.reads += 1
+            except Exception as e:
+                logging.error(f"Reading: {e}")
+                self.failed_reads += 1
+
+            # Write
+            try:
+                self.cached[key] = int(self.r.incr(key))
+                self.writes += 1
+            except Exception as e:
+                logging.error(f"Reading: {e}")
+                self.failed_writes += 1
+
+            # Report
+            time.sleep(self.delay)
+            if time.time() != last_report:
+                report = f"{self.reads} R ({self.failed_reads} err) | " + \
+                         f"{self.writes} W ({self.failed_writes} err) | "
+                report += f"{self.lost_writes} lost | " if self.lost_writes > 0 else ""
+                report += f"{self.not_ack_writes} noack | " if self.not_ack_writes > 0 else ""
+                last_report = time.time()
+                print(report)
+            
