@@ -34,3 +34,10 @@ class ConsistencyTester:
             self.lost_writes += expected-value
         elif expected < value:
             self.not_ack_writes += value-expected
+
+    def puterr(self, msg):
+        if not self.errtime[msg] or time.time() != self.errtime[msg]:
+            print(msg)
+        
+        self.errtime[msg] = self.time.time()
+    
