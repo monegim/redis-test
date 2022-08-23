@@ -16,6 +16,6 @@ class ConsistencyTester:
         self.delay = 0
         self.cached = {}  # We take our view of data stored in the DB.
         time_stamp_us = time.time_ns() % 10**9 // 1000  # Get ns
-        self.prefix = [str(os.getpid()), str(time_stamp_us),
-                       str(self.r.object_id), ""].join("|")
+        self.prefix = "|".join([str(os.getpid()), str(time_stamp_us),
+                       str(self.r.object_id), ""])
         self.errtime = {}
